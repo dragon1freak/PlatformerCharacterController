@@ -5,7 +5,12 @@ extends PlatformerController
 # var a = 2
 # var b = "text"
 
-
+var old_state
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	pass # Replace with function body.
+	old_state = self.state
+
+func _process(delta):
+	if old_state != self.state:
+		print(state)
+		old_state = state
