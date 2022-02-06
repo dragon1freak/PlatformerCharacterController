@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/765020-Andrey_Avkhimovich-20 GOTO 10.mp3-f754cc88b517c069d050139568e92006.mp3str"
+
+[deps]
+
+source_file="res://src/765020-Andrey_Avkhimovich-20 GOTO 10.mp3"
+dest_files=[ "res://.import/765020-Andrey_Avkhimovich-20 GOTO 10.mp3-f754cc88b517c069d050139568e92006.mp3str" ]
+
+[params]
+
+loop=true
+loop_offset=0
