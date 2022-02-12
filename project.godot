@@ -12,16 +12,16 @@ _global_script_classes=[ {
 "base": "KinematicBody2D",
 "class": "PlatformerController",
 "language": "GDScript",
-"path": "res://src/PlatformerController.gd"
+"path": "res://src/scripts/PlatformerController.gd"
 }, {
 "base": "KinematicBody2D",
-"class": "PlatformerControllerClass",
+"class": "PlatformerControllerWLadder",
 "language": "GDScript",
-"path": "res://src/PlatformerControllerClass.gd"
+"path": "res://src/scripts/PlatformerControllerWLadder.gd"
 } ]
 _global_script_class_icons={
 "PlatformerController": "",
-"PlatformerControllerClass": ""
+"PlatformerControllerWLadder": ""
 }
 
 [application]
