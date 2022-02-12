@@ -109,11 +109,6 @@ anims/Walk = SubResource( 6 )
 [node name="Camera2D" type="Camera2D" parent="."]
 current = true
 
-[node name="RayCast2D" type="RayCast2D" parent="."]
-position = Vector2( 0, 8 )
-enabled = true
-cast_to = Vector2( 0, 3 )
-
 [node name="JumpSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource( 3 )
 
@@ -122,32 +117,3 @@ stream = ExtResource( 3 )
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LadderCheck"]
 position = Vector2( 0, 2 )
 shape = SubResource( 1 )
-
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="Control" type="Control" parent="CanvasLayer"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Label" type="Label" parent="CanvasLayer/Control"]
-margin_left = 16.0
-margin_top = 16.0
-margin_right = 64.0
-margin_bottom = 40.0
-text = "0"
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="Label2" type="Label" parent="CanvasLayer/Control"]
-margin_left = 440.0
-margin_top = 16.0
-margin_right = 488.0
-margin_bottom = 40.0
-text = "100"
-__meta__ = {
-"_edit_use_anchors_": false
-}
