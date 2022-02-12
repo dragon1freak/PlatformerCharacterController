@@ -1,8 +1,7 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=9 format=2]
 
-[ext_resource path="res://src/Player.png" type="Texture" id=1]
-[ext_resource path="res://src/Player.gd" type="Script" id=2]
-[ext_resource path="res://src/jump.wav" type="AudioStream" id=3]
+[ext_resource path="res://src/sprites/Player.png" type="Texture" id=1]
+[ext_resource path="res://src/scripts/PlatformerController.gd" type="Script" id=2]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 6, 8 )
@@ -109,10 +108,8 @@ anims/Walk = SubResource( 6 )
 [node name="Camera2D" type="Camera2D" parent="."]
 current = true
 
-[node name="JumpSound" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource( 3 )
-
 [node name="LadderCheck" type="Area2D" parent="."]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LadderCheck"]
 position = Vector2( 0, 2 )
