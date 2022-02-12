@@ -24,25 +24,29 @@ export(float, 0, 1000, 0.1) var JUMP_CANCEL_FORCE : float = 800
 export(float, 0, 1000, 0.1) var GRAVITY : float = 500
 export(float, 0, 1, 0.01) var COYOTE_TIMER : float = 0.08
 export(float, 0, 1, 0.01) var JUMP_BUFFER_TIMER : float = 0.1
-export(bool) var CAN_SPRINT : bool = false
+export(bool) var ENABLE_SPRINT : bool = false
 export(float, 0, 10, 0.1) var SPRINT_MULTIPLIER : float = 1.5
 
 enum {IDLE, WALK, JUMP, FALL}
 var state : int = IDLE
+
+onready var can_sprint : bool = ENABLE_SPRINT
+var sprinting : bool = false
 var can_jump : bool = false
 var should_jump : bool = false
 var jumping : bool = false
 var can_ladder : bool = false
+var laddering : bool = false
 
 var motion : Vector2 = Vector2.ZERO
 func _physics_process(delta : float) -> void:
 	physics_tick(delta)
-	timer(delta)
 
 func physics_tick(delta : float) -> void:
 	var inputs : Dictionary = handle_inputs(delta)
 	handle_jump(inputs.jump_strength, inputs.jump_pushed, inputs.jump_released)
-	handle_motion(delta, inputs.input_direction, inputs.sprint_strength)
+	handle_sprint(inputs.sprint_strength)
+	handle_motion(delta, inputs.input_direction)
 	manage_animations()
 	manage_state()
 	
@@ -51,6 +55,8 @@ func physics_tick(delta : float) -> void:
 	if !jumping && motion.y < 0 && !can_ladder:
 		cancel_jump(delta)
 	if !can_ladder:
+		laddering = false
+	if !laddering:
 		motion.y += GRAVITY * delta
 	motion = move_and_slide(motion, Vector2.UP)
 
@@ -99,15 +105,17 @@ func get_input_direction() -> Vector2:
 	return Vector2(x_dir if JOYSTICK_MOVEMENT else sign(x_dir), y_dir if JOYSTICK_MOVEMENT else sign(y_dir))
 
 # ------------------ Movement Logic ---------------------------------
-func handle_motion(delta : float, input_direction : Vector2 = Vector2.ZERO, sprint_strength : float = 0.0) -> void:
+func handle_motion(delta : float, input_direction : Vector2 = Vector2.ZERO) -> void:
 	if input_direction.x != 0:
-		apply_motion(delta, input_direction, SPRINT_MULTIPLIER if sprint_strength > 0 else 1.0)
+		apply_motion(delta, input_direction, SPRINT_MULTIPLIER if sprinting  else 1.0)
 	else:
 		apply_friction(delta)
 	if input_direction.y != 0 && can_ladder:
+		laddering = true
+		can_jump = true
 		motion.y += input_direction.y * ACCELERATION * delta
 		motion.y = clamp(motion.y, -MAX_SPEED * abs(input_direction.y), MAX_SPEED * abs(input_direction.y))
-	elif can_ladder:
+	elif laddering:
 		motion.y = 0
 
 func apply_motion(delta : float, move_direction : Vector2, sprint_strength : float) -> void:
@@ -122,6 +130,13 @@ func apply_friction(delta : float) -> void:
 		motion.x = 0
 	else:
 		motion.x += fric
+
+func handle_sprint(sprint_strength : float) -> void:
+	print(sprint_strength)
+	if sprint_strength != 0 and can_sprint:
+		sprinting = true
+	else:
+		sprinting = false
 
 # ------------------ Jumping Logic ---------------------------------
 func handle_jump(jump_strength : float = 0.0, jump_pressed : bool = false, jump_released : bool = false) -> void:
@@ -138,6 +153,7 @@ enum JUMP_DIRECTIONS {UP = -1, DOWN}
 func apply_jump(jump_force : float = JUMP_FORCE, jump_direction : int = JUMP_DIRECTIONS.UP) -> void:
 	can_jump = false
 	should_jump = false
+	laddering = false
 	jumping = true
 	motion.y += jump_force * jump_direction
 	$JumpSound.play()
@@ -153,20 +169,3 @@ func buffer_jump() -> void:
 func coyote_time() -> void:
 	yield(get_tree().create_timer(COYOTE_TIMER),"timeout")
 	can_jump = false
-
-
-
-# ------ Extra -----
-var score = 0
-func score():
-	score += floor(rand_range(5, 10))
-	self.get_node("CanvasLayer/Control/Label").text = str(score)
-
-var time = 100
-var sum = 0.0
-func timer(delta):
-	sum += delta
-	if sum >= 1.0:
-		sum = 0.0
-		time -= 1
-		self.get_node("CanvasLayer/Control/Label2").text = str(time)

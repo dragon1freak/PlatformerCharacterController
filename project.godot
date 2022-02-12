@@ -28,7 +28,6 @@ _global_script_class_icons={
 
 config/name="2DCharacterController"
 run/main_scene="res://src/world.tscn"
-config/icon="res://src/icon.png"
 
 [display]
 
