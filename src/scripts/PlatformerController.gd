@@ -1,59 +1,59 @@
-extends KinematicBody2D
+extends CharacterBody2D
 class_name PlatformerController
 
 # The path to the character's Sprite node, defaults to 'get_node("Sprite")'
-export(NodePath) var PLAYER_SPRITE
-onready var _sprite : Sprite = get_node(PLAYER_SPRITE) if PLAYER_SPRITE else $Sprite
+@export_node_path("Sprite2D") var PLAYER_SPRITE
+@onready var _sprite : Sprite2D = get_node(PLAYER_SPRITE) if PLAYER_SPRITE else $Sprite2D
 
 # The path to the character's AnimationPlayer node, defaults to 'get_node("AnimationPlayer")'
-export(NodePath) var ANIMATION_PLAYER
-onready var _animation_player : AnimationPlayer = get_node(ANIMATION_PLAYER) if ANIMATION_PLAYER else $AnimationPlayer
+@export_node_path("AnimationPlayer") var ANIMATION_PLAYER
+@onready var _animation_player : AnimationPlayer = get_node(ANIMATION_PLAYER) if ANIMATION_PLAYER else $AnimationPlayer
 
 # Input Map actions related to each movement direction, jumping, and sprinting.  Set each to their related 
 # action's name in your Input Mapping or create actions with the default names.
-export(String) var ACTION_UP : String = "up"
-export(String) var ACTION_DOWN : String = "down"
-export(String) var ACTION_LEFT : String = "left"
-export(String) var ACTION_RIGHT : String = "right"
-export(String) var ACTION_JUMP : String = "jump"
-export(String) var ACTION_SPRINT : String = "sprint"
+@export var ACTION_UP : String = "up"
+@export var ACTION_DOWN : String = "down"
+@export var ACTION_LEFT : String = "left"
+@export var ACTION_RIGHT : String = "right"
+@export var ACTION_JUMP : String = "jump"
+@export var ACTION_SPRINT : String = "sprint"
 
 # Enables/Disables hard movement when using a joystick.  When enabled, slightly moving the joystick
 # will only move the character at a percentage of the maximum acceleration and speed instead of the maximum.
-export(bool) var JOYSTICK_MOVEMENT : bool = false
+@export var JOYSTICK_MOVEMENT : bool = false
 
 # The following float values are in px/sec when used in movement calculations with 'delta'
 # How fast the character gets to the MAX_SPEED value
-export(float, 0, 1000, 0.1) var ACCELERATION : float = 500
+@export_range(0, 1000, 0.1) var ACCELERATION : float = 500
 # The overall cap on the character's speed
-export(float, 0, 1000, 0.1) var MAX_SPEED : float = 100
+@export_range(0, 1000, 0.1) var MAX_SPEED : float = 100
 # How fast the character's speed goes back to zero when not moving
-export(float, 0, 1000, 0.1) var FRICTION : float = 500
+@export_range(0, 1000, 0.1) var FRICTION : float = 500
 # How fast the character's speed goes back to zero when not moving in the air
-export(float, 0, 1000, 0.1) var AIR_RESISTENCE : float = 200
+@export_range(0, 1000, 0.1) var AIR_RESISTENCE : float = 200
 # The speed of the jump when leaving the ground
-export(float, 0, 1000, 0.1) var JUMP_FORCE : float = 200
+@export_range(0, 1000, 0.1) var JUMP_FORCE : float = 200
 # How fast the character's vertical speed goes back to zero when cancelling a jump
-export(float, 0, 1000, 0.1) var JUMP_CANCEL_FORCE : float = 800
+@export_range(0, 1000, 0.1) var JUMP_CANCEL_FORCE : float = 800
 # The speed of gravity applied to the character
-export(float, 0, 1000, 0.1) var GRAVITY : float = 500
+@export_range(0, 1000, 0.1) var GRAVITY : float = 500
 
 # How long in seconds after walking off a platform the character can still jump, set this to zero to disable it
-export(float, 0, 1, 0.01) var COYOTE_TIMER : float = 0.08
+@export_range(0, 1, 0.01) var COYOTE_TIMER : float = 0.08
 # How long in seconds before landing should the game still accept the Jump command, set this to zero to disable it
-export(float, 0, 1, 0.01) var JUMP_BUFFER_TIMER : float = 0.1
+@export_range(0, 1, 0.01) var JUMP_BUFFER_TIMER : float = 0.1
 
 # Enable/Disable sprinting
-export(bool) var ENABLE_SPRINT : bool = false
+@export var ENABLE_SPRINT : bool = false
 # Sprint multiplier, multiplies the MAX_SPEED by this value when sprinting
-export(float, 0, 10, 0.1) var SPRINT_MULTIPLIER : float = 1.5
+@export_range(0, 10, 0.1) var SPRINT_MULTIPLIER : float = 1.5
 
 # The four possible character states and the character's current state
 enum {IDLE, WALK, JUMP, FALL}
 var state : int = IDLE
 
 # The player can sprint when can_sprint is true
-onready var can_sprint : bool = ENABLE_SPRINT
+@onready var can_sprint : bool = ENABLE_SPRINT
 # The player is sprinting when sprinting is true
 var sprinting : bool = false
 # The player can jump when can_jump is true
@@ -63,8 +63,6 @@ var should_jump : bool = false
 # The player is jumping when jumping is true
 var jumping : bool = false
 
-# The character's current motion vector
-var motion : Vector2 = Vector2.ZERO
 func _physics_process(delta : float) -> void:
 	physics_tick(delta)
 
@@ -74,33 +72,33 @@ func physics_tick(delta : float) -> void:
 	var inputs : Dictionary = handle_inputs()
 	handle_jump(delta, inputs.jump_strength, inputs.jump_pressed, inputs.jump_released)
 	handle_sprint(inputs.sprint_strength)
-	handle_motion(delta, inputs.input_direction)
+	handle_velocity(delta, inputs.input_direction)
 	manage_animations()
 	manage_state()
 
-	motion.y += GRAVITY * delta
+	velocity.y += GRAVITY * delta
 	if !is_on_floor() && can_jump:
 		coyote_time()
-	motion = move_and_slide(motion, Vector2.UP)
+	move_and_slide()
 
-# Manages the character's current state based on the current motion vector
+# Manages the character's current state based on the current velocity vector
 func manage_state() -> void:
-	if motion.y == 0:
-		if motion.x == 0:
+	if velocity.y == 0:
+		if velocity.x == 0:
 			state = IDLE
 		else:
 			state = WALK
-	elif motion.y < 0:
+	elif velocity.y < 0:
 		state = JUMP
 	else:
 		state = FALL
 
 # Manages the character's animations based on the current state and sprite direction based on 
-# the current horizontal motion
+# the current horizontal velocity
 func manage_animations() -> void:
-	if motion.x > 0:
+	if velocity.x > 0:
 		_sprite.flip_h = false
-	elif motion.x < 0:
+	elif velocity.x < 0:
 		_sprite.flip_h = true
 	match state:
 		IDLE:
@@ -130,27 +128,27 @@ func get_input_direction() -> Vector2:
 
 # ------------------ Movement Logic ---------------------------------
 # Takes delta and the current input direction and either applies the movement or applies friction
-func handle_motion(delta : float, input_direction : Vector2 = Vector2.ZERO) -> void:
+func handle_velocity(delta : float, input_direction : Vector2 = Vector2.ZERO) -> void:
 	if input_direction.x != 0:
-		apply_motion(delta, input_direction)
+		apply_velocity(delta, input_direction)
 	else:
 		apply_friction(delta)
 
-# Applies motion in the current input direction using the ACCELERATION, MAX_SPEED, and SPRINT_MULTIPLIER
-func apply_motion(delta : float, move_direction : Vector2) -> void:
-	if motion.x != 0 and sign(move_direction.x) != sign(motion.x):
+# Applies velocity in the current input direction using the ACCELERATION, MAX_SPEED, and SPRINT_MULTIPLIER
+func apply_velocity(delta : float, move_direction : Vector2) -> void:
+	if velocity.x != 0 and sign(move_direction.x) != sign(velocity.x):
 		apply_friction(delta)
 	var sprint_strength = SPRINT_MULTIPLIER if sprinting else 1.0
-	motion.x += move_direction.x * ACCELERATION * delta * (sprint_strength if is_on_floor() else 1.0)
-	motion.x = clamp(motion.x, -MAX_SPEED * abs(move_direction.x) * sprint_strength, MAX_SPEED * abs(move_direction.x) * sprint_strength)
+	velocity.x += move_direction.x * ACCELERATION * delta * (sprint_strength if is_on_floor() else 1.0)
+	velocity.x = clamp(velocity.x, -MAX_SPEED * abs(move_direction.x) * sprint_strength, MAX_SPEED * abs(move_direction.x) * sprint_strength)
 
 # Applies friction to the horizontal axis when not moving using the FRICTION and AIR_RESISTENCE values
 func apply_friction(delta : float) -> void:
-	var fric = FRICTION * delta * sign(motion.x) * -1 if is_on_floor() else AIR_RESISTENCE * delta * sign(motion.x) * -1
-	if abs(motion.x) <= abs(fric):
-		motion.x = 0
+	var fric = FRICTION * delta * sign(velocity.x) * -1 if is_on_floor() else AIR_RESISTENCE * delta * sign(velocity.x) * -1
+	if abs(velocity.x) <= abs(fric):
+		velocity.x = 0
 	else:
-		motion.x += fric
+		velocity.x += fric
 
 # Sets the sprinting variable according to the strength of the sprint input action
 func handle_sprint(sprint_strength : float) -> void:
@@ -166,9 +164,9 @@ func handle_jump(delta : float, jump_strength : float = 0.0, jump_pressed : bool
 		apply_jump()
 	elif jump_pressed:
 		buffer_jump()
-	elif jump_strength == 0 and motion.y < 0:
+	elif jump_strength == 0 and velocity.y < 0:
 		cancel_jump(delta)
-	if is_on_floor() and motion.y >= 0:
+	if is_on_floor() and velocity.y >= 0:
 		can_jump = true
 
 # The values for the jump direction, default is UP or -1
@@ -179,20 +177,20 @@ func apply_jump(jump_force : float = JUMP_FORCE, jump_direction : int = JUMP_DIR
 	can_jump = false
 	should_jump = false
 	jumping = true
-	motion.y += jump_force * jump_direction
+	velocity.y += jump_force * jump_direction
 
 # If jump is released before reaching the top of the jump the jump is cancelled using the JUMP_CANCEL_FORCE and default
 func cancel_jump(delta : float) -> void:
-	motion.y -= JUMP_CANCEL_FORCE * sign(motion.y) * delta
+	velocity.y -= JUMP_CANCEL_FORCE * sign(velocity.y) * delta
 
 # If jump is pressed before hitting the ground, it's buffered using the JUMP_BUFFER_TIMER value and the jump is applied 
 # if the character lands before the timer ends
 func buffer_jump() -> void:
 	should_jump = true
-	yield(get_tree().create_timer(JUMP_BUFFER_TIMER),"timeout")
+	await get_tree().create_timer(JUMP_BUFFER_TIMER).timeout
 	should_jump = false
 
 # If the character steps off of a platform, they are given an amount of time in the air to still jump using the COYOTE_TIMER value
 func coyote_time() -> void:
-	yield(get_tree().create_timer(COYOTE_TIMER),"timeout")
+	await get_tree().create_timer(COYOTE_TIMER).timeout
 	can_jump = false
