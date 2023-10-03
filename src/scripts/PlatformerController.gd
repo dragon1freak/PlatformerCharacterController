@@ -97,7 +97,7 @@ func manage_state() -> void:
 		else:
 			state = WALK
 	elif velocity.y < 0:
-			state = JUMP
+		state = JUMP
 	else:
 		if can_wall_jump && is_on_wall_only():
 			state = WALL_SLIDE
