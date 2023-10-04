@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=3 uid="uid://dr2dqurqe6um8"]
 
-[ext_resource type="Script" path="res://src/scripts/PlatformerController.gd" id="1_atc7w"]
+[ext_resource type="Script" path="res://src/scripts/platformer_controller.gd" id="1_v1qya"]
 [ext_resource type="Texture2D" uid="uid://c763yfown7hgi" path="res://src/sprites/Player.png" id="2_ttx00"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4xe80"]
@@ -80,7 +80,7 @@ _data = {
 }
 
 [node name="Player" type="CharacterBody2D"]
-script = ExtResource("1_atc7w")
+script = ExtResource("1_v1qya")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 2)
